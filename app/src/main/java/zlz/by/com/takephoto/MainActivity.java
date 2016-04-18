@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -21,12 +22,14 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.net.URI;
 
 public class MainActivity extends Activity {
 
     private TextView take,updata,get;
     private ImageView img;
-    private   File file ,file2;
+    private   File dir,file ,file2;
     String path;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +42,8 @@ public class MainActivity extends Activity {
         updata = (TextView) findViewById(R.id.updataphoto);
         updata.setOnClickListener(new onlick());
         img = (ImageView) findViewById(R.id.img);
-        File dir = Environment.getExternalStorageDirectory();
+        img.setOnClickListener(new onlick());
+        dir = Environment.getExternalStorageDirectory();
         path = dir.getPath()+ "/zlz/";
 
         file = new File(path);
@@ -64,6 +68,8 @@ public class MainActivity extends Activity {
                   break;
               case  R.id.get:
                     get();
+                  break;
+              case  R.id.img:
                   break;
           }
            }
@@ -93,12 +99,26 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     else  if(requestCode == 1)
     {
         try {
-            img.setImageBitmap(BitmapFactory.decodeStream(getContentResolver().openInputStream(data.getData())));
 
-
+            Bitmap map = BitmapFactory.decodeStream(getContentResolver().openInputStream(data.getData()));
+            FileOutputStream out = new FileOutputStream(file2);
+            map.compress(Bitmap.CompressFormat.JPEG,50,out);
+            Uri uri = Uri.fromFile(file2);
+            startImage(uri);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+
+
+
+
+
+    }else if( requestCode == 2){
+         Bundle zlz = data.getExtras();
+         Bitmap bitmap = zlz.getParcelable("data");
+         img.setImageBitmap(bitmap);
+
 
 
     }
@@ -110,33 +130,30 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
     private void setPic() {
         // Get the dimensions of the View
-        int targetW = img.getWidth();
-        int targetH = img.getHeight();
+//        int targetW = img.getWidth();
+//        int targetH = img.getHeight();
 
         // Get the dimensions of the bitmap
+
+
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(file2.getPath(), bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
+//        int photoW = bmOptions.outWidth;
+//        int photoH = bmOptions.outHeight;
+//
+//        // Determine how much to scale down the image
+//        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+//
+//        // Decode the image file into a Bitmap sized to fill the View
+//        bmOptions.inJustDecodeBounds = false;
+//
+//        bmOptions.inSampleSize = scaleFactor;
+//        bmOptions.inPurgeable = true;
 
         Bitmap bitmap = BitmapFactory.decodeFile(file2.getPath(), bmOptions);
-        if(bitmap == null){
-
-            Log.e("zlz", "zkon");
-
-        }else {
-            img.setImageBitmap(bitmap);
-        }
+        Uri uri = Uri.fromFile(file2);
+        startImage(uri);
     }
   private void  upload(){
 
@@ -147,11 +164,23 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
   private void get(){
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("image/*");
+        i.putExtra("return-data", true);
         startActivityForResult(i,1);
 
         }
 
+   private void  startImage(Uri uri){
+        Intent  intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(uri, "image/*");
+        intent.putExtra("crop", "true");
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY",1);
+        intent.putExtra("outputX",150);
+        intent.putExtra("outputY",150);
+        intent.putExtra("return-data",true);
+        startActivityForResult(intent,2);
 
+   }
 
 
 
