@@ -20,10 +20,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 public class MainActivity extends Activity {
 
-    private TextView take,updata;
+    private TextView take,updata,get;
     private ImageView img;
     private   File file ,file2;
     String path;
@@ -32,6 +33,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
        take = (TextView) findViewById(R.id.tokephoto);
+        get = (TextView) findViewById(R.id.get);
+        get.setOnClickListener(new onlick());
         take.setOnClickListener(new onlick());
         updata = (TextView) findViewById(R.id.updataphoto);
         updata.setOnClickListener(new onlick());
@@ -54,7 +57,15 @@ public class MainActivity extends Activity {
 
            @Override
           public void onClick(View v) {
-          takephoto();
+          switch (v.getId()) {
+              case  R.id.tokephoto:
+
+              takephoto();
+                  break;
+              case  R.id.get:
+                    get();
+                  break;
+          }
            }
         }
 
@@ -75,10 +86,26 @@ public class MainActivity extends Activity {
 //        }
 //    }
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    Log.e("zlz",requestCode + "");
+    Log.e("zlz", requestCode + "");
     if (requestCode == 0 ) {
         setPic();
     }
+    else  if(requestCode == 1)
+    {
+        try {
+            img.setImageBitmap(BitmapFactory.decodeStream(getContentResolver().openInputStream(data.getData())));
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+
+
 }
 
     private void setPic() {
@@ -111,6 +138,21 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
             img.setImageBitmap(bitmap);
         }
     }
+  private void  upload(){
+
+
+
+  }
+
+  private void get(){
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.setType("image/*");
+        startActivityForResult(i,1);
+
+        }
+
+
+
 
 
 }
